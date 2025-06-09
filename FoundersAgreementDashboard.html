@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Founders' Agreement Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Custom Magoo Palette -->
+    <!-- Application Structure Plan: A single-page dashboard with four interactive, thematic sections: 1) "At a Glance" for key metrics like equity and salaries, 2) An "Interactive Revenue Model" with a slider to simulate cash flow, 3) An "Equity & Vesting Timeline" to visualize ownership evolution, and 4) A "Contingency Planning" section for "what-if" scenarios like the buyback clause and CEO ascension path. This structure transforms the static legal text into a dynamic decision-making tool. It prioritizes usability by allowing the founders to immediately see the financial and equity implications of different scenarios, which is far more intuitive for strategic planning than reading linear clauses. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Initial Equity Split -> Goal: Compare -> Viz: Donut Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides a quick, clear visual comparison of ownership stakes.
+        - Report Info: Revenue Breakdown -> Goal: Explore Change -> Viz: Interactive Slider + Dynamic Data Cards + Stacked Bar Chart (Chart.js) -> Interaction: Slider adjusts all financial values in real-time -> Justification: Makes the complex financial waterfall model tangible and easy to simulate different revenue outcomes.
+        - Report Info: Cregg's Vesting Schedule -> Goal: Show Progress/Change -> Viz: HTML/CSS Timeline Diagram -> Interaction: Click to highlight stage details -> Justification: Clearly visualizes a time- and performance-based process.
+        - Report Info: Buyback Clause -> Goal: Calculate -> Viz: HTML Dropdown + Text Output -> Interaction: User selects time-frame to see buyback cost -> Justification: Turns a legal clause into a practical, on-demand calculator.
+        - Report Info: CEO Ascension Path -> Goal: Simulate -> Viz: HTML Checklist + Dynamic Donut Chart (Chart.js) -> Interaction: Checking milestones reveals potential new equity split -> Justification: Gamifies the achievement of milestones and visually communicates the potential reward.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .slider-thumb::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #ff4010; border-radius: 50%; cursor: pointer; margin-top: -6px; }
+        .slider-thumb::-moz-range-thumb { width: 20px; height: 20px; background: #ff4010; border-radius: 50%; cursor: pointer; }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange-1': '#ff4010',
+                        'secondary-orange-2': '#dc300f',
+                        'custom-blue': '#64aed2',
+                        'custom-cream': '#f8dd9d',
+                        'heather-grey': '#c9bab6',
+                        'pure-white': '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-custom-cream text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-primary-orange-1 mb-2">Magoo Media</h1>
+            <h1 class="text-3xl md:text-4xl font-bold text-primary-orange-1">Founders' Agreement Dashboard</h1>
+            <p class="mt-2 text-lg text-slate-600">An Interactive Model for Tyler & Cregg</p>
+        </header>
+
+        <main class="space-y-12">
+            
+            <!-- Section 1: At a Glance -->
+            <section id="at-a-glance" class="p-6 bg-pure-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
+                    At a Glance
+                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('At a Glance')">✨ Explain</button>
+                </h2>
+                <p class="text-slate-600 mb-6">This section provides a high-level overview of the foundational terms of your partnership, including the initial equity distribution and base monthly salaries.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Initial Equity Split</h3>
+                        <div class="chart-container">
+                            <canvas id="equityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Base Survival Salaries</h3>
+                        <div class="bg-heather-grey p-4 rounded-lg">
+                            <p class="text-slate-600">Tyler's Monthly Draw</p>
+                            <p class="text-2xl font-bold text-slate-900">$4,000</p>
+                        </div>
+                        <div class="bg-heather-grey p-4 rounded-lg">
+                            <p class="text-slate-600">Cregg's Monthly Draw</p>
+                            <p class="text-2xl font-bold text-slate-900">$3,000</p>
+                        </div>
+                         <div class="bg-heather-grey p-4 rounded-lg">
+                            <p class="text-slate-600">Total Monthly Draw</p>
+                            <p class="text-2xl font-bold text-slate-900">$7,000</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Interactive Revenue Model -->
+            <section id="revenue-model" class="p-6 bg-pure-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
+                    Interactive Revenue Model
+                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Interactive Revenue Model')">✨ Explain</button>
+                </h2>
+                 <p class="text-slate-600 mb-6">Use the slider to simulate different monthly revenue scenarios. The cards below will update in real-time to show how cash is allocated between the company, taxes, and founder compensation, including Tyler's and Cregg's specific draws. This helps visualize cash flow at different stages of growth.</p>
+                <div class="mb-6">
+                    <label for="revenueSlider" class="block font-semibold text-slate-700 mb-2">Monthly Revenue: <span id="revenueValue" class="font-bold text-primary-orange-1">$20,000</span></label>
+                    <input id="revenueSlider" type="range" min="0" max="50000" value="20000" step="1000" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8 text-center">
+                    <div class="bg-heather-grey p-4 rounded-lg">
+                        <p class="text-slate-600">Company Reserve (20%)</p>
+                        <p id="companyReserve" class="text-2xl font-bold text-slate-900">$4,000</p>
+                    </div>
+                    <div class="bg-heather-grey p-4 rounded-lg">
+                        <p class="text-slate-600">Taxes (15%)</p>
+                        <p id="taxes" class="text-2xl font-bold text-slate-900">$3,000</p>
+                    </div>
+                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
+                        <p class="text-pure-white">Owner Comp. Pool (65%)</p>
+                        <p id="ownerPool" class="text-2xl font-bold text-pure-white">$13,000</p>
+                    </div>
+                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
+                        <p class="text-pure-white">Tyler's Draw</p>
+                        <p id="tylerDraw" class="text-2xl font-bold text-pure-white">$4,000 <span class="text-sm font-normal" id="tylerPercent">(20%)</span></p>
+                    </div>
+                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
+                        <p class="text-pure-white">Cregg's Draw</p>
+                        <p id="creggDraw" class="text-2xl font-bold text-pure-white">$3,000 <span class="text-sm font-normal" id="creggPercent">(15%)</span></p>
+                    </div>
+                    <div class="bg-primary-orange-1 p-4 rounded-lg text-pure-white">
+                        <p class="text-pure-white">Surplus/Deficit</p>
+                        <p id="remainder" class="text-2xl font-bold text-pure-white">$6,000</p>
+                    </div>
+                </div>
+                <div>
+                     <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Cashflow Allocation</h3>
+                     <div class="chart-container" style="max-width: 800px;">
+                        <canvas id="revenueSplitChart"></canvas>
+                    </div>
+                    <button class="mt-4 bg-primary-orange-1 text-pure-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200 block mx-auto" onclick="getScenarioInsights()">✨ Get Scenario Insights</button>
+                    <div id="scenarioInsights" class="mt-4 p-4 bg-heather-grey rounded-lg text-slate-800 hidden">
+                        <p class="font-semibold mb-2">Insights:</p>
+                        <p id="insightsText"></p>
+                        <div id="insightsLoading" class="text-center mt-2 hidden">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange-1 mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Equity & Vesting -->
+            <section id="vesting-path" class="p-6 bg-pure-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
+                    Cregg's Vesting Path
+                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Cregg\'s Vesting Path')">✨ Explain</button>
+                </h2>
+                <p class="text-slate-600 mb-6">This section outlines the performance-based milestones for Cregg's equity stake, demonstrating how ownership is earned through sustained contribution and company growth.</p>
+                <div class="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
+                        <p class="font-bold text-2xl text-slate-900">30%</p>
+                        <p class="font-semibold text-slate-700">Vests Immediately</p>
+                        <p class="text-sm text-slate-500">Upon signing the agreement</p>
+                    </div>
+                    <div class="self-center font-bold text-2xl text-slate-400 mx-4">&rarr;</div>
+                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
+                        <p class="font-bold text-2xl text-slate-900">5%</p>
+                        <p class="font-semibold text-slate-700">After $30k MRR</p>
+                        <p class="text-sm text-slate-500">Additional equity for hitting revenue milestone</p>
+                    </div>
+                     <div class="self-center font-bold text-2xl text-slate-400 mx-4">&rarr;</div>
+                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
+                        <p class="font-bold text-2xl text-slate-900">Up to 49% Total</p>
+                        <p class="font-semibold text-slate-700">Upon CEO Takeover</p>
+                        <p class="text-sm text-slate-500">Subject to meeting all CEO ascension triggers</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Contingency Planning -->
+            <section id="contingency-planning" class="p-6 bg-pure-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
+                    Contingency Planning
+                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Contingency Planning')">✨ Explain</button>
+                </h2>
+                <p class="text-slate-600 mb-6">Successful partnerships plan for the future. This area models two key "what-if" scenarios: a founder exiting the company (Buyback Clause) and Cregg's potential to take on more responsibility (CEO Path).</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- Buyback Calculator -->
+                    <div class="p-6 bg-heather-grey rounded-lg">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Founder Buyback Calculator</h3>
+                        <p class="text-sm text-slate-600 mb-4">If a founder leaves, the company has the right to buy back their equity. Select the time frame to see the agreed-upon valuation per 1% of equity.</p>
+                        <div class="mb-4">
+                            <label for="buybackTime" class="block text-sm font-medium text-slate-700">Time Since Equity Granted</label>
+                            <select id="buybackTime" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-primary-orange-1 focus:border-primary-orange-1 sm:text-sm rounded-md">
+                                <option value="400">0 - 6 months</option>
+                                <option value="2000">6 - 12 months</option>
+                                <option value="4000">12 - 24 months</option>
+                                <option value="FMV">24+ months</option>
+                            </select>
+                        </div>
+                        <div>
+                            <p class="text-slate-600">Buyback Price (per 1% Equity)</p>
+                            <p id="buybackPrice" class="text-3xl font-bold text-slate-900">$400</p>
+                        </div>
+                    </div>
+
+                    <!-- CEO Ascension Path -->
+                    <div class="p-6 bg-heather-grey rounded-lg">
+                         <h3 class="text-xl font-semibold text-slate-800 mb-4">Cregg's CEO Ascension Path</h3>
+                         <p class="text-sm text-slate-600 mb-4">If Cregg meets all performance goals, he can renegotiate for up to 49% equity. Check the boxes to simulate this outcome.</p>
+                        <div class="space-y-3 mb-4" id="ceoChecklist">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
+                                <span class="ml-2 text-slate-700">Fulfills CEO duties for 90+ days</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
+                                <span class="ml-2 text-slate-700">Reaches $30k+ consistent MRR</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
+                                <span class="ml-2 text-slate-700">Drives 60%+ of growth activity</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
+                                <span class="ml-2 text-slate-700">Mutual agreement on operational control</span>
+                            </label>
+                        </div>
+                        <div>
+                            <h4 class="text-center font-semibold text-slate-800">Potential New Equity Split</h4>
+                            <div class="chart-container">
+                                <canvas id="ceoPathChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Explanation Modal -->
+    <div id="explanationModal" class="modal hidden">
+        <div class="modal-content text-slate-800">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle" class="text-xl font-bold text-primary-orange-1 mb-4"></h3>
+            <p id="modalText" class="text-slate-700"></p>
+            <div id="modalLoading" class="text-center mt-4 hidden">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange-1 mx-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const config = {
+                yourName: 'Tyler',
+                creggName: 'Cregg',
+                yourSalary: 4000,
+                creggSalary: 3000,
+                reservePercent: 0.20,
+                taxPercent: 0.15,
+                ownerPoolPercent: 0.65,
+            };
+
+            const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+
+            let equityChart, revenueSplitChart, ceoPathChart;
+
+            const createEquityChart = () => {
+                const ctx = document.getElementById('equityChart').getContext('2d');
+                return new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [config.yourName, config.creggName],
+                        datasets: [{
+                            data: [70, 30],
+                            backgroundColor: ['#ff4010', '#c9bab6'],
+                            borderColor: '#FFFFFF',
+                            borderWidth: 4,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            };
+            
+            const createCeoPathChart = (yourEquity = 70, creggEquity = 30) => {
+                 if (ceoPathChart) {
+                    ceoPathChart.data.datasets[0].data = [yourEquity, creggEquity];
+                    ceoPathChart.update();
+                    return;
+                }
+                const ctx = document.getElementById('ceoPathChart').getContext('2d');
+                return new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [config.yourName, config.creggName],
+                        datasets: [{
+                            data: [yourEquity, creggEquity],
+                            backgroundColor: ['#ff4010', '#64aed2'],
+                            borderColor: '#FFFFFF',
+                            borderWidth: 4,
+                            hoverOffset: 4
+                        }]
+                    },
+                     options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            };
+            
+            const createRevenueSplitChart = (revenue = 20000) => {
+                const reserve = revenue * config.reservePercent;
+                const taxes = revenue * config.taxPercent;
+                const totalSalaries = config.yourSalary + config.creggSalary;
+                const ownerPool = revenue * config.ownerPoolPercent;
+                const remainder = ownerPool - totalSalaries;
+
+                const ctx = document.getElementById('revenueSplitChart').getContext('2d');
+                if (revenueSplitChart) {
+                    revenueSplitChart.data.datasets[0].data = [totalSalaries, Math.max(0, remainder)];
+                    revenueSplitChart.data.datasets[1].data = [reserve];
+                    revenueSplitChart.data.datasets[2].data = [taxes];
+                    revenueSplitChart.options.scales.x.max = revenue > 0 ? revenue : 1;
+                    revenueSplitChart.update();
+                    return;
+                }
+                
+                return new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Revenue Allocation'],
+                        datasets: [
+                            { label: 'Salaries', data: [totalSalaries], backgroundColor: '#ff4010', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Surplus/Bonus Pool', data: [Math.max(0, remainder)], backgroundColor: '#dc300f', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Company Reserve', data: [reserve], backgroundColor: '#c9bab6', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Taxes', data: [taxes], backgroundColor: '#64aed2', borderWidth: 1, stack: 'stack1' },
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += formatCurrency(context.parsed.x);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: { display: true, text: 'Amount (USD)' },
+                                ticks: {
+                                    callback: (value) => formatCurrency(value)
+                                },
+                                max: revenue > 0 ? revenue : 1,
+                            },
+                            y: { stacked: true }
+                        }
+                    }
+                });
+            };
+
+            const updateRevenueModel = () => {
+                const revenue = parseFloat(document.getElementById('revenueSlider').value);
+                const reserve = revenue * config.reservePercent;
+                const taxes = revenue * config.taxPercent;
+                const ownerPool = revenue * config.ownerPoolPercent;
+                const totalSalaries = config.yourSalary + config.creggSalary;
+                const remainder = ownerPool - totalSalaries;
+
+                const tylerPercentOfRevenue = revenue > 0 ? (config.yourSalary / revenue) * 100 : 0;
+                const creggPercentOfRevenue = revenue > 0 ? (config.creggSalary / revenue) * 100 : 0;
+
+                document.getElementById('revenueValue').textContent = formatCurrency(revenue);
+                document.getElementById('companyReserve').textContent = formatCurrency(reserve);
+                document.getElementById('taxes').textContent = formatCurrency(taxes);
+                document.getElementById('ownerPool').textContent = formatCurrency(ownerPool);
+                
+                const tylerDrawEl = document.getElementById('tylerDraw');
+                if (tylerDrawEl) {
+                    tylerDrawEl.textContent = formatCurrency(config.yourSalary);
+                }
+                
+                const creggDrawEl = document.getElementById('creggDraw');
+                if (creggDrawEl) {
+                    creggDrawEl.textContent = formatCurrency(config.creggSalary);
+                }
+
+                const tylerPercentEl = document.getElementById('tylerPercent');
+                if (tylerPercentEl) {
+                    tylerPercentEl.textContent = `(${tylerPercentOfRevenue.toFixed(0)}%)`;
+                }
+
+                const creggPercentEl = document.getElementById('creggPercent');
+                if (creggPercentEl) {
+                    creggPercentEl.textContent = `(${creggPercentOfRevenue.toFixed(0)}%)`;
+                }
+                
+                document.getElementById('remainder').textContent = formatCurrency(remainder);
+
+                const remainderEl = document.getElementById('remainder');
+                remainderEl.classList.toggle('text-red-600', remainder < 0);
+                remainderEl.classList.toggle('text-pure-white', remainder >= 0);
+
+                createRevenueSplitChart(revenue);
+            };
+
+            const updateBuybackCalculator = () => {
+                const select = document.getElementById('buybackTime');
+                const price = select.value;
+                const display = document.getElementById('buybackPrice');
+                display.textContent = price === 'FMV' ? 'Fair Market Value' : formatCurrency(price);
+            };
+
+            const updateCeoPath = () => {
+                const checkboxes = document.querySelectorAll('#ceoChecklist input[type="checkbox"]');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                if (allChecked) {
+                    createCeoPathChart(51, 49);
+                } else {
+                    createCeoPathChart(70, 30);
+                }
+            };
+            
+            document.getElementById('revenueSlider').addEventListener('input', updateRevenueModel);
+            document.getElementById('buybackTime').addEventListener('change', updateBuybackCalculator);
+            document.querySelectorAll('#ceoChecklist input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateCeoPath);
+            });
+
+            equityChart = createEquityChart();
+            ceoPathChart = createCeoPathChart();
+            revenueSplitChart = createRevenueSplitChart();
+            updateRevenueModel();
+            updateBuybackCalculator();
+        });
+
+        // LLM Integration Functions
+        const openModal = () => {
+            document.getElementById('explanationModal').style.display = 'flex';
+        };
+
+        const closeModal = () => {
+            document.getElementById('explanationModal').style.display = 'none';
+            document.getElementById('modalText').textContent = '';
+            document.getElementById('modalLoading').classList.add('hidden');
+        };
+
+        const explainClause = async (clauseName) => {
+            document.getElementById('modalTitle').textContent = `Explanation: ${clauseName}`;
+            document.getElementById('modalText').textContent = '';
+            document.getElementById('modalLoading').classList.remove('hidden');
+            openModal();
+
+            const prompt = `Explain the "${clauseName}" section of a founders' agreement dashboard in simple terms, focusing on its purpose and key elements. Keep it concise.`;
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    document.getElementById('modalText').textContent = result.candidates[0].content.parts[0].text;
+                } else {
+                    document.getElementById('modalText').textContent = 'Could not generate explanation. Please try again.';
+                }
+            } catch (error) {
+                document.getElementById('modalText').textContent = 'Error: Failed to connect to the explanation service. Please check your network connection.';
+                console.error('Error fetching explanation:', error);
+            } finally {
+                document.getElementById('modalLoading').classList.add('hidden');
+            }
+        };
+
+        const getScenarioInsights = async () => {
+            const revenue = parseFloat(document.getElementById('revenueSlider').value);
+            const companyReserve = parseFloat(document.getElementById('companyReserve').textContent.replace(/[^0-9.-]+/g,""));
+            const taxes = parseFloat(document.getElementById('taxes').textContent.replace(/[^0-9.-]+/g,""));
+            const ownerPool = parseFloat(document.getElementById('ownerPool').textContent.replace(/[^0-9.-]+/g,""));
+            const tylerDraw = parseFloat(document.getElementById('tylerDraw').textContent.replace(/[^0-9.-]+/g,""));
+            const creggDraw = parseFloat(document.getElementById('creggDraw').textContent.replace(/[^0-9.-]+/g,""));
+            const remainder = parseFloat(document.getElementById('remainder').textContent.replace(/[^0-9.-]+/g,""));
+
+            document.getElementById('scenarioInsights').classList.remove('hidden');
+            document.getElementById('insightsText').textContent = '';
+            document.getElementById('insightsLoading').classList.remove('hidden');
+
+            const prompt = `Given a monthly revenue of ${formatCurrency(revenue)}, where ${formatCurrency(companyReserve)} goes to company reserve, ${formatCurrency(taxes)} to taxes, ${formatCurrency(ownerPool)} to the owner compensation pool. From this pool, Tyler draws ${formatCurrency(tylerDraw)} and Cregg draws ${formatCurrency(creggDraw)}, resulting in a surplus/deficit of ${formatCurrency(remainder)}. What are the key takeaways or implications for the founders at this revenue level? Be concise and actionable.`;
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    document.getElementById('insightsText').textContent = result.candidates[0].content.parts[0].text;
+                } else {
+                    document.getElementById('insightsText').textContent = 'Could not generate insights. Please try again.';
+                }
+            } catch (error) {
+                document.getElementById('insightsText').textContent = 'Error: Failed to connect to the insights service. Please check your network connection.';
+                console.error('Error fetching insights:', error);
+            } finally {
+                document.getElementById('insightsLoading').classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
