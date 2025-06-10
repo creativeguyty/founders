@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Custom Magoo Palette -->
-    <!-- Application Structure Plan: A single-page dashboard with four interactive, thematic sections: 1) "At a Glance" for key metrics like equity and salaries, 2) An "Interactive Revenue Model" with a slider to simulate cash flow, 3) An "Equity & Vesting Timeline" to visualize ownership evolution, and 4) A "Contingency Planning" section for "what-if" scenarios like the buyback clause and CEO ascension path. This structure transforms the static legal text into a dynamic decision-making tool. It prioritizes usability by allowing the founders to immediately see the financial and equity implications of different scenarios, which is far more intuitive for strategic planning than reading linear clauses. -->
+    <!-- Application Structure Plan: A single-page dashboard with four interactive, thematic sections: 1) "At a Glance" for key metrics like equity and salaries, 2) An "Interactive Revenue Model" with sliders for revenue and number of clients, to simulate cash flow including dynamic expenses and calculate break-even, 3) An "Equity & Vesting Timeline" to visualize ownership evolution, and 4) A "Contingency Planning" section for "what-if" scenarios like the buyback clause and CEO ascension path. This structure transforms the static legal text into a dynamic decision-making tool. It prioritizes usability by allowing the founders to immediately see the financial and equity implications of different scenarios, which is far more intuitive for strategic planning than reading linear clauses. -->
     <!-- Visualization & Content Choices: 
         - Report Info: Initial Equity Split -> Goal: Compare -> Viz: Donut Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides a quick, clear visual comparison of ownership stakes.
-        - Report Info: Revenue Breakdown -> Goal: Explore Change -> Viz: Interactive Slider + Dynamic Data Cards + Stacked Bar Chart (Chart.js) -> Interaction: Slider adjusts all financial values in real-time -> Justification: Makes the complex financial waterfall model tangible and easy to simulate different revenue outcomes.
+        - Report Info: Revenue Breakdown with Dynamic Expenses and Break-Even -> Goal: Explore Change & Inform -> Viz: Interactive Sliders + Dynamic Data Cards (including break-even) + Stacked Bar Chart (Chart.js) -> Interaction: Sliders for revenue and number of clients adjust all financial values in real-time -> Justification: Makes the complex financial waterfall model tangible and easy to simulate different revenue and dynamic expense outcomes, directly showing survival revenue.
         - Report Info: Cregg's Vesting Schedule -> Goal: Show Progress/Change -> Viz: HTML/CSS Timeline Diagram -> Interaction: Click to highlight stage details -> Justification: Clearly visualizes a time- and performance-based process.
         - Report Info: Buyback Clause -> Goal: Calculate -> Viz: HTML Dropdown + Text Output -> Interaction: User selects time-frame to see buyback cost -> Justification: Turns a legal clause into a practical, on-demand calculator.
         - Report Info: CEO Ascension Path -> Goal: Simulate -> Viz: HTML Checklist + Dynamic Donut Chart (Chart.js) -> Interaction: Checking milestones reveals potential new equity split -> Justification: Gamifies the achievement of milestones and visually communicates the potential reward.
@@ -110,18 +110,18 @@
                         </div>
                     </div>
                     <div class="space-y-4">
-                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Base Survival Salaries</h3>
+                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Base Survival Salaries (Minimum Needed)</h3>
                         <div class="bg-heather-grey p-4 rounded-lg">
                             <p class="text-slate-600">Tyler's Monthly Draw</p>
-                            <p class="text-2xl font-bold text-slate-900">$4,000</p>
+                            <p class="text-2xl font-bold text-slate-900">$3,500</p>
                         </div>
                         <div class="bg-heather-grey p-4 rounded-lg">
                             <p class="text-slate-600">Cregg's Monthly Draw</p>
-                            <p class="text-2xl font-bold text-slate-900">$3,000</p>
+                            <p class="text-2xl font-bold text-slate-900">$2,500</p>
                         </div>
                          <div class="bg-heather-grey p-4 rounded-lg">
-                            <p class="text-slate-600">Total Monthly Draw</p>
-                            <p class="text-2xl font-bold text-slate-900">$7,000</p>
+                            <p class="text-slate-600">Total Combined Draws</p>
+                            <p class="text-2xl font-bold text-slate-900">$6,000</p>
                         </div>
                     </div>
                 </div>
@@ -133,35 +133,48 @@
                     Interactive Revenue Model
                     <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Interactive Revenue Model')">✨ Explain</button>
                 </h2>
-                 <p class="text-slate-600 mb-6">Use the slider to simulate different monthly revenue scenarios. The cards below will update in real-time to show how cash is allocated between the company, taxes, and founder compensation, including Tyler's and Cregg's specific draws. This helps visualize cash flow at different stages of growth.</p>
+                 <p class="text-slate-600 mb-6">Use the sliders to simulate different monthly revenue and client scenarios. The cards below will update in real-time to show how cash is allocated and what revenue is needed for survival.</p>
                 <div class="mb-6">
-                    <label for="revenueSlider" class="block font-semibold text-slate-700 mb-2">Monthly Revenue: <span id="revenueValue" class="font-bold text-primary-orange-1">$20,000</span></label>
-                    <input id="revenueSlider" type="range" min="0" max="50000" value="20000" step="1000" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <label for="revenueSlider" class="block font-semibold text-slate-700 mb-2">Monthly Gross Revenue: <span id="revenueValue" class="font-bold text-primary-orange-1">$14,000</span></label>
+                    <input id="revenueSlider" type="range" min="0" max="50000" value="14000" step="500" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8 text-center">
+                <div class="mb-6">
+                    <label for="clientsSlider" class="block font-semibold text-slate-700 mb-2">Number of Clients: <span id="clientsValue" class="font-bold text-primary-orange-1">5</span></label>
+                    <input id="clientsSlider" type="range" min="0" max="20" value="5" step="1" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8 text-center">
                     <div class="bg-heather-grey p-4 rounded-lg">
-                        <p class="text-slate-600">Company Reserve (20%)</p>
-                        <p id="companyReserve" class="text-2xl font-bold text-slate-900">$4,000</p>
+                        <p class="text-slate-600">Company Reserve (10%)</p>
+                        <p id="companyReserve" class="text-2xl font-bold text-slate-900">$1,400</p>
                     </div>
                     <div class="bg-heather-grey p-4 rounded-lg">
                         <p class="text-slate-600">Taxes (15%)</p>
-                        <p id="taxes" class="text-2xl font-bold text-slate-900">$3,000</p>
+                        <p id="taxes" class="text-2xl font-bold text-slate-900">$2,100</p>
+                    </div>
+                     <div class="bg-heather-grey p-4 rounded-lg">
+                        <p class="text-slate-600">Total Monthly Op. Expenses</p>
+                        <p id="totalExpenses" class="text-2xl font-bold text-slate-900">$7,500</p>
                     </div>
                     <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Owner Comp. Pool (65%)</p>
-                        <p id="ownerPool" class="text-2xl font-bold text-pure-white">$13,000</p>
+                        <p class="text-pure-white">Revenue After Reserve, Taxes & OpEx</p>
+                        <p id="revenueAfterAllFixed" class="text-2xl font-bold text-pure-white">$3,000</p>
                     </div>
                     <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Tyler's Draw</p>
-                        <p id="tylerDraw" class="text-2xl font-bold text-pure-white">$4,000 <span class="text-sm font-normal" id="tylerPercent">(20%)</span></p>
+                        <p class="text-pure-white">Tyler's Draw (Min)</p>
+                        <p id="tylerDraw" class="text-2xl font-bold text-pure-white">$3,500</p>
                     </div>
                     <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Cregg's Draw</p>
-                        <p id="creggDraw" class="text-2xl font-bold text-pure-white">$3,000 <span class="text-sm font-normal" id="creggPercent">(15%)</span></p>
+                        <p class="text-pure-white">Cregg's Draw (Min)</p>
+                        <p id="creggDraw" class="text-2xl font-bold text-pure-white">$2,500</p>
                     </div>
-                    <div class="bg-primary-orange-1 p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Surplus/Deficit</p>
-                        <p id="remainder" class="text-2xl font-bold text-pure-white">$6,000</p>
+                    <div class="bg-primary-orange-1 p-4 rounded-lg text-pure-white md:col-span-2">
+                        <p class="text-pure-white">Final Surplus/Deficit</p>
+                        <p id="remainder" class="text-2xl font-bold text-pure-white">-$3,000</p>
+                    </div>
+                    <div class="bg-secondary-orange-2 p-4 rounded-lg text-pure-white md:col-span-2">
+                        <p class="text-pure-white">Minimum Revenue Needed to Break Even</p>
+                        <p id="breakEvenRevenue" class="text-2xl font-bold text-pure-white">$19,200</p>
                     </div>
                 </div>
                 <div>
@@ -288,11 +301,11 @@
             const config = {
                 yourName: 'Tyler',
                 creggName: 'Cregg',
-                yourSalary: 4000,
-                creggSalary: 3000,
-                reservePercent: 0.20,
+                yourMinSalary: 3500, // Updated minimum
+                creggMinSalary: 2500, // Updated minimum
+                reservePercent: 0.10, 
                 taxPercent: 0.15,
-                ownerPoolPercent: 0.65,
+                costPerClient: 1500, 
             };
 
             const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
@@ -356,18 +369,22 @@
                 });
             };
             
-            const createRevenueSplitChart = (revenue = 20000) => {
-                const reserve = revenue * config.reservePercent;
-                const taxes = revenue * config.taxPercent;
-                const totalSalaries = config.yourSalary + config.creggSalary;
-                const ownerPool = revenue * config.ownerPoolPercent;
-                const remainder = ownerPool - totalSalaries;
+            const createRevenueSplitChart = (revenue = 14000, expenses = 7500, tylerDraw = 3500, creggDraw = 2500) => {
+                const companyReserveAmount = revenue * config.reservePercent;
+                const taxesAmount = revenue * config.taxPercent;
+                const totalSalaries = tylerDraw + creggDraw;
+                
+                // Calculate what's left after fixed company deductions
+                const revenueAfterFixedCompanyCosts = revenue - companyReserveAmount - taxesAmount - expenses;
+                const finalSurplus = revenueAfterFixedCompanyCosts - totalSalaries;
 
                 const ctx = document.getElementById('revenueSplitChart').getContext('2d');
                 if (revenueSplitChart) {
-                    revenueSplitChart.data.datasets[0].data = [totalSalaries, Math.max(0, remainder)];
-                    revenueSplitChart.data.datasets[1].data = [reserve];
-                    revenueSplitChart.data.datasets[2].data = [taxes];
+                    revenueSplitChart.data.datasets[0].data = [companyReserveAmount]; // Company Reserve
+                    revenueSplitChart.data.datasets[1].data = [taxesAmount]; // Taxes
+                    revenueSplitChart.data.datasets[2].data = [expenses]; // Expenses
+                    revenueSplitChart.data.datasets[3].data = [totalSalaries]; // Salaries
+                    revenueSplitChart.data.datasets[4].data = [Math.max(0, finalSurplus)]; // Positive surplus
                     revenueSplitChart.options.scales.x.max = revenue > 0 ? revenue : 1;
                     revenueSplitChart.update();
                     return;
@@ -378,10 +395,11 @@
                     data: {
                         labels: ['Revenue Allocation'],
                         datasets: [
-                            { label: 'Salaries', data: [totalSalaries], backgroundColor: '#ff4010', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Surplus/Bonus Pool', data: [Math.max(0, remainder)], backgroundColor: '#dc300f', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Company Reserve', data: [reserve], backgroundColor: '#c9bab6', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Taxes', data: [taxes], backgroundColor: '#64aed2', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Company Reserve', data: [companyReserveAmount], backgroundColor: '#c9bab6', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Taxes', data: [taxesAmount], backgroundColor: '#f8dd9d', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Operating Expenses', data: [expenses], backgroundColor: '#dc300f', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Founders\' Draws (Min)', data: [totalSalaries], backgroundColor: '#ff4010', borderWidth: 1, stack: 'stack1' },
+                            { label: 'Final Surplus/Deficit', data: [Math.max(0, finalSurplus)], backgroundColor: '#64aed2', borderWidth: 1, stack: 'stack1' },
                         ]
                     },
                     options: {
@@ -422,29 +440,42 @@
 
             const updateRevenueModel = () => {
                 const revenue = parseFloat(document.getElementById('revenueSlider').value);
-                const reserve = revenue * config.reservePercent;
-                const taxes = revenue * config.taxPercent;
-                const ownerPool = revenue * config.ownerPoolPercent;
-                const totalSalaries = config.yourSalary + config.creggSalary;
-                const remainder = ownerPool - totalSalaries;
+                const numberOfClients = parseFloat(document.getElementById('clientsSlider').value); 
+                const expenses = numberOfClients * config.costPerClient; 
 
-                const tylerPercentOfRevenue = revenue > 0 ? (config.yourSalary / revenue) * 100 : 0;
-                const creggPercentOfRevenue = revenue > 0 ? (config.creggSalary / revenue) * 100 : 0;
+                const companyReserveAmount = revenue * config.reservePercent;
+                const taxesAmount = revenue * config.taxPercent;
+                const totalSalaries = config.yourMinSalary + config.creggMinSalary;
+                
+                // Calculate revenue remaining after mandatory company deductions (reserve, taxes, expenses)
+                const revenueAfterFixedCompanyCosts = revenue - companyReserveAmount - taxesAmount - expenses;
+                const finalSurplus = revenueAfterFixedCompanyCosts - totalSalaries;
+
+                // Break-even calculation:
+                // Let R = total revenue.
+                // R - (R * reservePercent) - (R * taxPercent) - expenses - totalSalaries = 0
+                // R * (1 - reservePercent - taxPercent) = expenses + totalSalaries
+                // R * (1 - 0.10 - 0.15) = expenses + totalSalaries
+                // R * 0.75 = expenses + totalSalaries
+                // R = (expenses + totalSalaries) / 0.75
+                const minRevenueNeeded = (expenses + totalSalaries) / (1 - config.reservePercent - config.taxPercent);
+
 
                 document.getElementById('revenueValue').textContent = formatCurrency(revenue);
-                document.getElementById('companyReserve').textContent = formatCurrency(reserve);
-                document.getElementById('taxes').textContent = formatCurrency(taxes);
-                document.getElementById('ownerPool').textContent = formatCurrency(ownerPool);
+                document.getElementById('clientsValue').textContent = numberOfClients; 
+                document.getElementById('totalExpenses').textContent = formatCurrency(expenses); 
+                document.getElementById('companyReserve').textContent = formatCurrency(companyReserveAmount);
+                document.getElementById('taxes').textContent = formatCurrency(taxesAmount);
                 
-                const tylerDrawEl = document.getElementById('tylerDraw');
-                if (tylerDrawEl) {
-                    tylerDrawEl.textContent = formatCurrency(config.yourSalary);
-                }
+                // Update ownerPool to reflect "Revenue After Reserve & Taxes"
+                document.getElementById('revenueAfterAllFixed').textContent = formatCurrency(revenueAfterFixedCompanyCosts);
                 
-                const creggDrawEl = document.getElementById('creggDraw');
-                if (creggDrawEl) {
-                    creggDrawEl.textContent = formatCurrency(config.creggSalary);
-                }
+                document.getElementById('tylerDraw').textContent = formatCurrency(config.yourMinSalary);
+                document.getElementById('creggDraw').textContent = formatCurrency(config.creggMinSalary);
+
+                // Note: Percentages for individual draws are now relative to the total revenue, not the owner pool, for clarity.
+                const tylerPercentOfRevenue = revenue > 0 ? (config.yourMinSalary / revenue) * 100 : 0;
+                const creggPercentOfRevenue = revenue > 0 ? (config.creggMinSalary / revenue) * 100 : 0;
 
                 const tylerPercentEl = document.getElementById('tylerPercent');
                 if (tylerPercentEl) {
@@ -456,13 +487,15 @@
                     creggPercentEl.textContent = `(${creggPercentOfRevenue.toFixed(0)}%)`;
                 }
                 
-                document.getElementById('remainder').textContent = formatCurrency(remainder);
+                document.getElementById('remainder').textContent = formatCurrency(finalSurplus);
+                document.getElementById('breakEvenRevenue').textContent = formatCurrency(minRevenueNeeded);
+
 
                 const remainderEl = document.getElementById('remainder');
-                remainderEl.classList.toggle('text-red-600', remainder < 0);
-                remainderEl.classList.toggle('text-pure-white', remainder >= 0);
+                remainderEl.classList.toggle('text-red-600', finalSurplus < 0);
+                remainderEl.classList.toggle('text-pure-white', finalSurplus >= 0);
 
-                createRevenueSplitChart(revenue);
+                createRevenueSplitChart(revenue, expenses, config.yourMinSalary, config.creggMinSalary);
             };
 
             const updateBuybackCalculator = () => {
@@ -483,6 +516,7 @@
             };
             
             document.getElementById('revenueSlider').addEventListener('input', updateRevenueModel);
+            document.getElementById('clientsSlider').addEventListener('input', updateRevenueModel);
             document.getElementById('buybackTime').addEventListener('change', updateBuybackCalculator);
             document.querySelectorAll('#ceoChecklist input[type="checkbox"]').forEach(cb => {
                 cb.addEventListener('change', updateCeoPath);
@@ -491,7 +525,7 @@
             equityChart = createEquityChart();
             ceoPathChart = createCeoPathChart();
             revenueSplitChart = createRevenueSplitChart();
-            updateRevenueModel();
+            updateRevenueModel(); // Initial call to set values
             updateBuybackCalculator();
         });
 
@@ -543,18 +577,21 @@
 
         const getScenarioInsights = async () => {
             const revenue = parseFloat(document.getElementById('revenueSlider').value);
+            const numberOfClients = parseFloat(document.getElementById('clientsSlider').value);
+            const expenses = numberOfClients * config.costPerClient; 
             const companyReserve = parseFloat(document.getElementById('companyReserve').textContent.replace(/[^0-9.-]+/g,""));
             const taxes = parseFloat(document.getElementById('taxes').textContent.replace(/[^0-9.-]+/g,""));
-            const ownerPool = parseFloat(document.getElementById('ownerPool').textContent.replace(/[^0-9.-]+/g,""));
             const tylerDraw = parseFloat(document.getElementById('tylerDraw').textContent.replace(/[^0-9.-]+/g,""));
             const creggDraw = parseFloat(document.getElementById('creggDraw').textContent.replace(/[^0-9.-]+/g,""));
             const remainder = parseFloat(document.getElementById('remainder').textContent.replace(/[^0-9.-]+/g,""));
+            const minRevenueNeeded = parseFloat(document.getElementById('breakEvenRevenue').textContent.replace(/[^0-9.-]+/g,""));
+
 
             document.getElementById('scenarioInsights').classList.remove('hidden');
             document.getElementById('insightsText').textContent = '';
             document.getElementById('insightsLoading').classList.remove('hidden');
 
-            const prompt = `Given a monthly revenue of ${formatCurrency(revenue)}, where ${formatCurrency(companyReserve)} goes to company reserve, ${formatCurrency(taxes)} to taxes, ${formatCurrency(ownerPool)} to the owner compensation pool. From this pool, Tyler draws ${formatCurrency(tylerDraw)} and Cregg draws ${formatCurrency(creggDraw)}, resulting in a surplus/deficit of ${formatCurrency(remainder)}. What are the key takeaways or implications for the founders at this revenue level? Be concise and actionable.`;
+            const prompt = `Given a monthly gross revenue of ${formatCurrency(revenue)}, company reserve of ${formatCurrency(companyReserve)}, taxes of ${formatCurrency(taxes)}, and monthly operating expenses of ${formatCurrency(expenses)} based on ${numberOfClients} clients (${formatCurrency(config.costPerClient)} per client). Tyler's minimum draw is ${formatCurrency(tylerDraw)} and Cregg's minimum draw is ${formatCurrency(creggDraw)}. The final surplus/deficit after all these deductions is ${formatCurrency(remainder)}. The minimum revenue needed to break even and cover all these costs (including minimum draws) is ${formatCurrency(minRevenueNeeded)}. What are the key takeaways or implications for the founders at this specific financial scenario? Be concise and actionable.`;
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
