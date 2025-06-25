@@ -1,624 +1,490 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Founders' Agreement Dashboard</title>
+    <title>Interactive Guide to Simultaneous Ring Setup</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Custom Magoo Palette -->
-    <!-- Application Structure Plan: A single-page dashboard with four interactive, thematic sections: 1) "At a Glance" for key metrics like equity and salaries, 2) An "Interactive Revenue Model" with sliders for revenue and number of clients, to simulate cash flow including dynamic expenses and calculate break-even, 3) An "Equity & Vesting Timeline" to visualize ownership evolution, and 4) A "Contingency Planning" section for "what-if" scenarios like the buyback clause and CEO ascension path. This structure transforms the static legal text into a dynamic decision-making tool. It prioritizes usability by allowing the founders to immediately see the financial and equity implications of different scenarios, which is far more intuitive for strategic planning than reading linear clauses. -->
+    <!-- Chosen Palette: Warm Neutrals with Teal Accent -->
+    <!-- Application Structure Plan: A guided, multi-section SPA. The user journey is designed to first educate on the core technical challenge (Voicemail Trap) and its solution (Answer Confirmation), then provide an interactive comparison hub for VoIP providers including a dynamic cost calculator, and finally offer a practical implementation checklist. This task-oriented flow is more user-friendly than the original report's linear structure, enabling users to quickly understand critical info, compare options based on their specific needs (team size), and then act. -->
     <!-- Visualization & Content Choices: 
-        - Report Info: Initial Equity Split -> Goal: Compare -> Viz: Donut Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides a quick, clear visual comparison of ownership stakes.
-        - Report Info: Revenue Breakdown with Dynamic Expenses and Break-Even -> Goal: Explore Change & Inform -> Viz: Interactive Sliders + Dynamic Data Cards (including break-even) + Stacked Bar Chart (Chart.js) -> Interaction: Sliders for revenue and number of clients adjust all financial values in real-time -> Justification: Makes the complex financial waterfall model tangible and easy to simulate different revenue and dynamic expense outcomes, directly showing survival revenue.
-        - Report Info: Cregg's Vesting Schedule -> Goal: Show Progress/Change -> Viz: HTML/CSS Timeline Diagram -> Interaction: Click to highlight stage details -> Justification: Clearly visualizes a time- and performance-based process.
-        - Report Info: Buyback Clause -> Goal: Calculate -> Viz: HTML Dropdown + Text Output -> Interaction: User selects time-frame to see buyback cost -> Justification: Turns a legal clause into a practical, on-demand calculator.
-        - Report Info: CEO Ascension Path -> Goal: Simulate -> Viz: HTML Checklist + Dynamic Donut Chart (Chart.js) -> Interaction: Checking milestones reveals potential new equity split -> Justification: Gamifies the achievement of milestones and visually communicates the potential reward.
+        - Report Info: Core problem (Enzo limitation) -> Goal: Inform -> Presentation: Hero section with clear text -> Interaction: None. Justification: Quickly orients the user.
+        - Report Info: Voicemail Trap vs. Answer Confirmation -> Goal: Explain a critical technical concept -> Presentation: A two-column HTML/CSS visual layout comparing the failure and success states. -> Interaction: None. Justification: A static visual comparison is the clearest way to explain this crucial concept without user input.
+        - Report Info: Provider data (features, pricing, setup) -> Goal: Compare & Decide -> Presentation: An interactive provider list that reveals detailed cards on click, coupled with a bar chart for cost comparison. -> Interaction: User clicks a provider to see details. The chart provides an immediate visual comparison of cost. Library: Chart.js. Justification: This allows users to drill down into details without being overwhelmed, while the chart offers at-a-glance financial insight.
+        - Report Info: Pricing data ($/user) -> Goal: Personalize Comparison -> Presentation: Bar chart and an input field for team size. -> Interaction: User changes team size, and the chart and cost data update instantly. Library: Chart.js. Justification: Makes the comparison directly relevant to the user's context, a significant improvement over a static table.
+        - Report Info: Implementation steps -> Goal: Guide Action -> Presentation: An interactive checklist. -> Interaction: User can check items. Justification: Transforms a passive list into an active tool, increasing user engagement and utility.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        @media (min-width: 768px) { .chart-container { height: 350px; } }
-        .slider-thumb::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #ff4010; border-radius: 50%; cursor: pointer; margin-top: -6px; }
-        .slider-thumb::-moz-range-thumb { width: 20px; height: 20px; background: #ff4010; border-radius: 50%; cursor: pointer; }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        body {
+            font-family: 'Inter', sans-serif;
         }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 600px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .provider-card {
+            transition: all 0.3s ease-in-out;
+            border-color: transparent;
+        }
+        .provider-card.selected {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            border-color: #0d9488; /* teal-600 */
+        }
+        .chart-container {
             position: relative;
-        }
-        .close-button {
-            color: #aaa;
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
         }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-orange-1': '#ff4010',
-                        'secondary-orange-2': '#dc300f',
-                        'custom-blue': '#64aed2',
-                        'custom-cream': '#f8dd9d',
-                        'heather-grey': '#c9bab6',
-                        'pure-white': '#FFFFFF',
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-custom-cream text-slate-800">
+<body class="bg-stone-50 text-stone-800">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-
-        <header class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-primary-orange-1 mb-2">Magoo Media</h1>
-            <h1 class="text-3xl md:text-4xl font-bold text-primary-orange-1">Founders' Agreement Dashboard</h1>
-            <p class="mt-2 text-lg text-slate-600">An Interactive Model for Tyler & Cregg</p>
-        </header>
-
-        <main class="space-y-12">
-            
-            <!-- Section 1: At a Glance -->
-            <section id="at-a-glance" class="p-6 bg-pure-white rounded-xl shadow-md">
-                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
-                    At a Glance
-                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('At a Glance')">✨ Explain</button>
-                </h2>
-                <p class="text-slate-600 mb-6">This section provides a high-level overview of the foundational terms of your partnership, including the initial equity distribution and base monthly salaries.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    <div>
-                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Initial Equity Split</h3>
-                        <div class="chart-container">
-                            <canvas id="equityChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="space-y-4">
-                        <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Base Survival Salaries (Minimum Needed)</h3>
-                        <div class="bg-heather-grey p-4 rounded-lg">
-                            <p class="text-slate-600">Tyler's Monthly Draw</p>
-                            <p class="text-2xl font-bold text-slate-900">$3,500</p>
-                        </div>
-                        <div class="bg-heather-grey p-4 rounded-lg">
-                            <p class="text-slate-600">Cregg's Monthly Draw</p>
-                            <p class="text-2xl font-bold text-slate-900">$2,500</p>
-                        </div>
-                         <div class="bg-heather-grey p-4 rounded-lg">
-                            <p class="text-slate-600">Total Combined Draws</p>
-                            <p class="text-2xl font-bold text-slate-900">$6,000</p>
-                        </div>
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-teal-700">Live Transfer Solutions</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#problem" class="nav-link text-stone-600 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium">The Challenge</a>
+                        <a href="#comparison" class="nav-link text-stone-600 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium">Provider Comparison</a>
+                        <a href="#calculator" class="nav-link text-stone-600 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium">Cost Calculator</a>
+                        <a href="#checklist" class="nav-link text-stone-600 hover:text-teal-600 px-3 py-2 rounded-md text-sm font-medium">Implementation</a>
                     </div>
                 </div>
-            </section>
-
-            <!-- Section 2: Interactive Revenue Model -->
-            <section id="revenue-model" class="p-6 bg-pure-white rounded-xl shadow-md">
-                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
-                    Interactive Revenue Model
-                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Interactive Revenue Model')">✨ Explain</button>
-                </h2>
-                 <p class="text-slate-600 mb-6">Use the sliders to simulate different monthly revenue and client scenarios. The cards below will update in real-time to show how cash is allocated and what revenue is needed for survival.</p>
-                <div class="mb-6">
-                    <label for="revenueSlider" class="block font-semibold text-slate-700 mb-2">Monthly Gross Revenue: <span id="revenueValue" class="font-bold text-primary-orange-1">$14,000</span></label>
-                    <input id="revenueSlider" type="range" min="0" max="50000" value="14000" step="500" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
-                </div>
-                <div class="mb-6">
-                    <label for="clientsSlider" class="block font-semibold text-slate-700 mb-2">Number of Clients: <span id="clientsValue" class="font-bold text-primary-orange-1">5</span></label>
-                    <input id="clientsSlider" type="range" min="0" max="20" value="5" step="1" class="w-full h-2 bg-heather-grey rounded-lg appearance-none cursor-pointer slider-thumb">
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8 text-center">
-                    <div class="bg-heather-grey p-4 rounded-lg">
-                        <p class="text-slate-600">Company Reserve (10%)</p>
-                        <p id="companyReserve" class="text-2xl font-bold text-slate-900">$1,400</p>
-                    </div>
-                    <div class="bg-heather-grey p-4 rounded-lg">
-                        <p class="text-slate-600">Taxes (15%)</p>
-                        <p id="taxes" class="text-2xl font-bold text-slate-900">$2,100</p>
-                    </div>
-                     <div class="bg-heather-grey p-4 rounded-lg">
-                        <p class="text-slate-600">Total Monthly Op. Expenses</p>
-                        <p id="totalExpenses" class="text-2xl font-bold text-slate-900">$7,500</p>
-                    </div>
-                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Revenue After Reserve, Taxes & OpEx</p>
-                        <p id="revenueAfterAllFixed" class="text-2xl font-bold text-pure-white">$3,000</p>
-                    </div>
-                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Tyler's Draw (Min)</p>
-                        <p id="tylerDraw" class="text-2xl font-bold text-pure-white">$3,500</p>
-                    </div>
-                    <div class="bg-custom-blue p-4 rounded-lg text-pure-white">
-                        <p class="text-pure-white">Cregg's Draw (Min)</p>
-                        <p id="creggDraw" class="text-2xl font-bold text-pure-white">$2,500</p>
-                    </div>
-                    <div class="bg-primary-orange-1 p-4 rounded-lg text-pure-white md:col-span-2">
-                        <p class="text-pure-white">Final Surplus/Deficit</p>
-                        <p id="remainder" class="text-2xl font-bold text-pure-white">-$3,000</p>
-                    </div>
-                    <div class="bg-secondary-orange-2 p-4 rounded-lg text-pure-white md:col-span-2">
-                        <p class="text-pure-white">Minimum Revenue Needed to Break Even</p>
-                        <p id="breakEvenRevenue" class="text-2xl font-bold text-pure-white">$19,200</p>
-                    </div>
-                </div>
-                <div>
-                     <h3 class="text-xl font-semibold text-slate-800 text-center mb-4">Cashflow Allocation</h3>
-                     <div class="chart-container" style="max-width: 800px;">
-                        <canvas id="revenueSplitChart"></canvas>
-                    </div>
-                    <button class="mt-4 bg-primary-orange-1 text-pure-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200 block mx-auto" onclick="getScenarioInsights()">✨ Get Scenario Insights</button>
-                    <div id="scenarioInsights" class="mt-4 p-4 bg-heather-grey rounded-lg text-slate-800 hidden">
-                        <p class="font-semibold mb-2">Insights:</p>
-                        <p id="insightsText"></p>
-                        <div id="insightsLoading" class="text-center mt-2 hidden">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange-1 mx-auto"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 3: Equity & Vesting -->
-            <section id="vesting-path" class="p-6 bg-pure-white rounded-xl shadow-md">
-                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
-                    Cregg's Vesting Path
-                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Cregg\'s Vesting Path')">✨ Explain</button>
-                </h2>
-                <p class="text-slate-600 mb-6">This section outlines the performance-based milestones for Cregg's equity stake, demonstrating how ownership is earned through sustained contribution and company growth.</p>
-                <div class="flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-4">
-                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
-                        <p class="font-bold text-2xl text-slate-900">30%</p>
-                        <p class="font-semibold text-slate-700">Vests Immediately</p>
-                        <p class="text-sm text-slate-500">Upon signing the agreement</p>
-                    </div>
-                    <div class="self-center font-bold text-2xl text-slate-400 mx-4">&rarr;</div>
-                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
-                        <p class="font-bold text-2xl text-slate-900">5%</p>
-                        <p class="font-semibold text-slate-700">After $30k MRR</p>
-                        <p class="text-sm text-slate-500">Additional equity for hitting revenue milestone</p>
-                    </div>
-                     <div class="self-center font-bold text-2xl text-slate-400 mx-4">&rarr;</div>
-                    <div class="flex-1 p-4 bg-heather-grey rounded-lg text-center">
-                        <p class="font-bold text-2xl text-slate-900">Up to 49% Total</p>
-                        <p class="font-semibold text-slate-700">Upon CEO Takeover</p>
-                        <p class="text-sm text-slate-500">Subject to meeting all CEO ascension triggers</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Section 4: Contingency Planning -->
-            <section id="contingency-planning" class="p-6 bg-pure-white rounded-xl shadow-md">
-                <h2 class="text-2xl font-bold text-primary-orange-1 mb-1 flex items-center justify-between">
-                    Contingency Planning
-                    <button class="ml-4 bg-primary-orange-1 text-pure-white px-3 py-1 rounded-full text-sm font-semibold hover:bg-secondary-orange-2 transition-colors duration-200" onclick="explainClause('Contingency Planning')">✨ Explain</button>
-                </h2>
-                <p class="text-slate-600 mb-6">Successful partnerships plan for the future. This area models two key "what-if" scenarios: a founder exiting the company (Buyback Clause) and Cregg's potential to take on more responsibility (CEO Path).</p>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    
-                    <!-- Buyback Calculator -->
-                    <div class="p-6 bg-heather-grey rounded-lg">
-                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Founder Buyback Calculator</h3>
-                        <p class="text-sm text-slate-600 mb-4">If a founder leaves, the company has the right to buy back their equity. Select the time frame to see the agreed-upon valuation per 1% of equity.</p>
-                        <div class="mb-4">
-                            <label for="buybackTime" class="block text-sm font-medium text-slate-700">Time Since Equity Granted</label>
-                            <select id="buybackTime" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-primary-orange-1 focus:border-primary-orange-1 sm:text-sm rounded-md">
-                                <option value="400">0 - 6 months</option>
-                                <option value="2000">6 - 12 months</option>
-                                <option value="4000">12 - 24 months</option>
-                                <option value="FMV">24+ months</option>
-                            </select>
-                        </div>
-                        <div>
-                            <p class="text-slate-600">Buyback Price (per 1% Equity)</p>
-                            <p id="buybackPrice" class="text-3xl font-bold text-slate-900">$400</p>
-                        </div>
-                    </div>
-
-                    <!-- CEO Ascension Path -->
-                    <div class="p-6 bg-heather-grey rounded-lg">
-                         <h3 class="text-xl font-semibold text-slate-800 mb-4">Cregg's CEO Ascension Path</h3>
-                         <p class="text-sm text-slate-600 mb-4">If Cregg meets all performance goals, he can renegotiate for up to 49% equity. Check the boxes to simulate this outcome.</p>
-                        <div class="space-y-3 mb-4" id="ceoChecklist">
-                            <label class="flex items-center">
-                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
-                                <span class="ml-2 text-slate-700">Fulfills CEO duties for 90+ days</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
-                                <span class="ml-2 text-slate-700">Reaches $30k+ consistent MRR</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
-                                <span class="ml-2 text-slate-700">Drives 60%+ of growth activity</span>
-                            </label>
-                            <label class="flex items-center">
-                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-primary-orange-1 focus:ring-primary-orange-1">
-                                <span class="ml-2 text-slate-700">Mutual agreement on operational control</span>
-                            </label>
-                        </div>
-                        <div>
-                            <h4 class="text-center font-semibold text-slate-800">Potential New Equity Split</h4>
-                            <div class="chart-container">
-                                <canvas id="ceoPathChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Explanation Modal -->
-    <div id="explanationModal" class="modal hidden">
-        <div class="modal-content text-slate-800">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <h3 id="modalTitle" class="text-xl font-bold text-primary-orange-1 mb-4"></h3>
-            <p id="modalText" class="text-slate-700"></p>
-            <div id="modalLoading" class="text-center mt-4 hidden">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-orange-1 mx-auto"></div>
             </div>
-        </div>
-    </div>
+        </nav>
+    </header>
 
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <!-- Introduction -->
+        <section id="intro" class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">You Need Simultaneous Ring, Not Round Robin</h2>
+            <p class="max-w-3xl mx-auto text-stone-600 text-lg">
+                Your goal is to have a live transfer from Enzo Dialer ring three people at once. This is called **Simultaneous Ring**. This guide will help you set it up correctly by integrating a specialized VoIP phone system, as Enzo Dialer itself cannot manage this type of advanced call routing.
+            </p>
+        </section>
+
+        <!-- The Core Challenge -->
+        <section id="problem" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold">The Critical Failure Point You Must Avoid</h3>
+                <p class="max-w-2xl mx-auto text-stone-600 mt-2">The biggest risk with simultaneous ring is the "Voicemail Trap." This happens when one person's phone is off or busy, sending your high-value lead to their personal voicemail and losing the opportunity instantly. The solution is a feature called "Answer Confirmation."</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg">
+                    <h4 class="text-xl font-semibold text-red-800 mb-3 flex items-center">
+                        <span class="mr-3 text-2xl">⚠️</span> The Voicemail Trap (Failure)
+                    </h4>
+                    <ol class="list-decimal list-inside space-y-2 text-red-700">
+                        <li>Live transfer rings 3 people.</li>
+                        <li>Agent 1's phone is off and goes to voicemail.</li>
+                        <li>The system sees voicemail as an "answer".</li>
+                        <li>Ringing stops for Agents 2 & 3.</li>
+                        <li class="font-bold">Result: A valuable lead is lost to a personal voicemail box.</li>
+                    </ol>
+                </div>
+                <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-r-lg">
+                     <h4 class="text-xl font-semibold text-teal-800 mb-3 flex items-center">
+                        <span class="mr-3 text-2xl">✅</span> Answer Confirmation (Success)
+                    </h4>
+                    <ol class="list-decimal list-inside space-y-2 text-teal-700">
+                        <li>Live transfer rings 3 people.</li>
+                        <li>Agent 1's voicemail "answers," but cannot "Press 1 to accept."</li>
+                        <li>System ignores voicemail and continues ringing.</li>
+                        <li>Agent 2 answers and presses "1".</li>
+                        <li class="font-bold">Result: The lead connects with a live person, securing the opportunity.</li>
+                    </ol>
+                </div>
+            </div>
+             <p class="text-center mt-8 text-sm text-stone-500 font-semibold">"Answer Confirmation" is a NON-NEGOTIABLE feature for this setup.</p>
+        </section>
+
+        <!-- Provider Comparison -->
+        <section id="comparison" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold">Compare VoIP Providers</h3>
+                <p class="max-w-2xl mx-auto text-stone-600 mt-2">
+                    Select a provider to see their key features, setup steps, and pricing. Our analysis shows Kixie is the only provider that explicitly confirms having the critical "Answer Confirmation" feature.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Provider List -->
+                <div class="md:col-span-1">
+                    <div id="provider-list" class="space-y-3">
+                        <!-- Provider buttons will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Provider Details -->
+                <div id="provider-details-container" class="md:col-span-2 bg-white p-6 rounded-lg shadow-md min-h-[300px]">
+                    <!-- Details will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Calculator -->
+        <section id="calculator" class="mb-16 scroll-mt-20">
+             <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold">Interactive Cost Calculator</h3>
+                <p class="max-w-2xl mx-auto text-stone-600 mt-2">
+                    Adjust the number of team members to see how it affects the estimated monthly cost for each provider. This helps visualize the financial commitment based on your team's size.
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex items-center justify-center mb-6">
+                    <label for="user-count" class="mr-4 font-medium">Number of Team Members:</label>
+                    <input type="number" id="user-count" value="3" min="1" class="w-24 p-2 border border-stone-300 rounded-md text-center">
+                </div>
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Implementation Checklist -->
+        <section id="checklist" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold">Your Implementation Framework</h3>
+                 <p class="max-w-2xl mx-auto text-stone-600 mt-2">Follow these steps to successfully deploy your new live transfer system. This checklist guides you from vendor selection through to going live.</p>
+            </div>
+            <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <input id="check1" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check1" class="text-stone-700">
+                            <strong class="font-semibold block">1. Select VoIP Provider</strong>
+                            Use the comparison tool to choose the best vendor for your budget and technical needs.
+                        </label>
+                    </li>
+                    <li class="flex items-start">
+                        <input id="check2" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check2" class="text-stone-700">
+                            <strong class="font-semibold block text-red-600">2. CRITICAL: Confirm "Answer Confirmation"</strong>
+                            During a demo or trial, make them prove this feature works. Do not sign a contract without this confirmation.
+                        </label>
+                    </li>
+                    <li class="flex items-start">
+                        <input id="check3" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check3" class="text-stone-700">
+                            <strong class="font-semibold block">3. Subscribe & Onboard Team</strong>
+                            Sign up for the chosen plan and get your 3 team members set up with the provider's apps.
+                        </label>
+                    </li>
+                     <li class="flex items-start">
+                        <input id="check4" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check4" class="text-stone-700">
+                            <strong class="font-semibold block">4. Acquire Ring Group Number</strong>
+                            Get a new, dedicated phone number from your VoIP provider for the transfer group.
+                        </label>
+                    </li>
+                     <li class="flex items-start">
+                        <input id="check5" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check5" class="text-stone-700">
+                            <strong class="font-semibold block">5. Build & Configure Ring Group</strong>
+                            Create the 3-person group, set it to "Simultaneous Ring", and enable Answer Confirmation.
+                        </label>
+                    </li>
+                     <li class="flex items-start">
+                        <input id="check6" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check6" class="text-stone-700">
+                            <strong class="font-semibold block">6. Test the System Thoroughly</strong>
+                            Call the new number from an outside line to confirm all devices ring and the feature works as expected.
+                        </label>
+                    </li>
+                     <li class="flex items-start">
+                        <input id="check7" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check7" class="text-stone-700">
+                            <strong class="font-semibold block">7. Train Enzo Dialer Agents</strong>
+                            Instruct agents to use the new Ring Group number for all relevant live transfers.
+                        </label>
+                    </li>
+                     <li class="flex items-start">
+                        <input id="check8" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 mt-1 mr-4 flex-shrink-0">
+                        <label for="check8" class="text-stone-700">
+                            <strong class="font-semibold block">8. Go Live & Monitor</strong>
+                            Implement the new workflow and use the VoIP provider's analytics to monitor performance.
+                        </label>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+    
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        const providerData = [
+            {
+                id: 'kixie',
+                name: 'Kixie',
+                tagline: 'Risk-Averse Choice with Confirmed Feature',
+                answerConfirmation: 'Yes',
+                pricePerUser: 35,
+                minUsers: 1,
+                notes: 'Kixie is the only provider confirmed to offer "Press One to Accept", making it the most reliable choice to avoid the voicemail trap. Pricing is an estimate and requires direct contact.',
+                setup: [
+                    'Subscribe to a Kixie plan.',
+                    'Go to Manage > Inbound > Ring Groups.',
+                    'Create a new group and name it.',
+                    'Set "Ring Type" to "Simultaneous".',
+                    'Enable the "Press One to Accept" checkbox.',
+                    'Add the 3 agents and assign a dedicated number.'
+                ]
+            },
+            {
+                id: 'mightycall',
+                name: 'MightyCall',
+                tagline: 'Budget-Conscious Choice',
+                answerConfirmation: 'Needs Verification',
+                pricePerUser: 15,
+                minUsers: 3,
+                notes: 'Extremely cost-effective for a 3-person team due to its pricing structure. The "Answer Confirmation" feature must be verified before purchasing.',
+                setup: [
+                    'Subscribe to the Core plan (3 user minimum).',
+                    'Navigate to the "Call Flows" section.',
+                    'Create a new call flow for your group number.',
+                    'Add a routing step for a group of users.',
+                    'Choose "Simultaneously" as the call sequence.',
+                    'Set a fallback destination (e.g., voicemail).'
+                ]
+            },
+            {
+                id: 'openphone',
+                name: 'OpenPhone',
+                tagline: 'Modern UX for Agile Teams',
+                answerConfirmation: 'Needs Verification',
+                pricePerUser: 25,
+                minUsers: 1,
+                notes: 'Excellent user interface and mobile app. Ideal for teams that value ease of use. "Answer Confirmation" must be verified.',
+                setup: [
+                    'Subscribe to the Premium plan.',
+                    'Acquire a new number for the group.',
+                    'Invite team members to the shared number.',
+                    'In number settings, create a ring group.',
+                    'Set the ring strategy to "Simultaneously".'
+                ]
+            },
+            {
+                id: 'ringcentral',
+                name: 'RingCentral',
+                tagline: 'Scalable for Future Growth',
+                answerConfirmation: 'Needs Verification',
+                pricePerUser: 25,
+                minUsers: 1,
+                notes: 'A powerful, scalable platform for growing businesses. Higher potential cost but robust features. "Answer Confirmation" must be verified.',
+                setup: [
+                    'Subscribe to the Advanced or Ultra plan.',
+                    'In the Admin Portal, go to call handling settings.',
+                    'Create a new Ring Group or Call Pickup Group.',
+                    'Set the ring pattern to "Simultaneous".',
+                    'Assign a direct phone number to the group.'
+                ]
+            },
+            {
+                id: 'dialpad',
+                name: 'Dialpad',
+                tagline: 'AI-Powered with EAP Feature',
+                answerConfirmation: 'Needs Verification',
+                pricePerUser: 25,
+                minUsers: 1,
+                notes: 'Simultaneous ring is part of an Early Adopter Program (EAP), which may add a hurdle to setup. "Answer Confirmation" must be verified.',
+                setup: [
+                    'Contact Dialpad support to request EAP access.',
+                    'Subscribe to a Pro or Enterprise plan.',
+                    'Navigate to Admin Settings > Contact Centers.',
+                    'Create a new center and select "Ring all agents at once".',
+                    'Assign a number and add agents.'
+                ]
+            },
+            {
+                id: 'vonage',
+                name: 'Vonage',
+                tagline: 'Established & Flexible',
+                answerConfirmation: 'Needs Verification',
+                pricePerUser: 27,
+                minUsers: 1,
+                notes: 'A flexible solution from an established provider. Pricing can be higher for small teams. "Answer Confirmation" must be verified.',
+                setup: [
+                    'Subscribe to a VBC plan (Advanced recommended).',
+                    'Go to Settings > Call Forwarding.',
+                    'Select "Simultaneous Ring" and add team members\' numbers.',
+                    'Configure ring duration and voicemail fallback.'
+                ]
+            }
+        ];
 
-            const config = {
-                yourName: 'Tyler',
-                creggName: 'Cregg',
-                yourMinSalary: 3500, // Updated minimum
-                creggMinSalary: 2500, // Updated minimum
-                reservePercent: 0.10, 
-                taxPercent: 0.15,
-                costPerClient: 1500, 
-            };
+        let costChart;
+        let selectedProviderId = 'kixie';
 
-            const formatCurrency = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+        const providerListEl = document.getElementById('provider-list');
+        const providerDetailsContainerEl = document.getElementById('provider-details-container');
+        const userCountInput = document.getElementById('user-count');
 
-            let equityChart, revenueSplitChart, ceoPathChart;
-
-            const createEquityChart = () => {
-                const ctx = document.getElementById('equityChart').getContext('2d');
-                return new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [config.yourName, config.creggName],
-                        datasets: [{
-                            data: [70, 30],
-                            backgroundColor: ['#ff4010', '#c9bab6'],
-                            borderColor: '#FFFFFF',
-                            borderWidth: 4,
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
-                        },
-                        cutout: '60%'
-                    }
-                });
-            };
-            
-            const createCeoPathChart = (yourEquity = 70, creggEquity = 30) => {
-                 if (ceoPathChart) {
-                    ceoPathChart.data.datasets[0].data = [yourEquity, creggEquity];
-                    ceoPathChart.update();
-                    return;
-                }
-                const ctx = document.getElementById('ceoPathChart').getContext('2d');
-                return new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [config.yourName, config.creggName],
-                        datasets: [{
-                            data: [yourEquity, creggEquity],
-                            backgroundColor: ['#ff4010', '#64aed2'],
-                            borderColor: '#FFFFFF',
-                            borderWidth: 4,
-                            hoverOffset: 4
-                        }]
-                    },
-                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
-                        },
-                        cutout: '60%'
-                    }
-                });
-            };
-            
-            const createRevenueSplitChart = (revenue = 14000, expenses = 7500, tylerDraw = 3500, creggDraw = 2500) => {
-                const companyReserveAmount = revenue * config.reservePercent;
-                const taxesAmount = revenue * config.taxPercent;
-                const totalSalaries = tylerDraw + creggDraw;
+        function renderProviderList() {
+            providerListEl.innerHTML = '';
+            providerData.forEach(provider => {
+                const isSelected = provider.id === selectedProviderId;
+                const buttonClasses = isSelected 
+                    ? 'bg-teal-600 text-white' 
+                    : 'bg-white text-stone-700 hover:bg-stone-100';
                 
-                // Calculate what's left after fixed company deductions
-                const revenueAfterFixedCompanyCosts = revenue - companyReserveAmount - taxesAmount - expenses;
-                const finalSurplus = revenueAfterFixedCompanyCosts - totalSalaries;
-
-                const ctx = document.getElementById('revenueSplitChart').getContext('2d');
-                if (revenueSplitChart) {
-                    revenueSplitChart.data.datasets[0].data = [companyReserveAmount]; // Company Reserve
-                    revenueSplitChart.data.datasets[1].data = [taxesAmount]; // Taxes
-                    revenueSplitChart.data.datasets[2].data = [expenses]; // Expenses
-                    revenueSplitChart.data.datasets[3].data = [totalSalaries]; // Salaries
-                    revenueSplitChart.data.datasets[4].data = [Math.max(0, finalSurplus)]; // Positive surplus
-                    revenueSplitChart.options.scales.x.max = revenue > 0 ? revenue : 1;
-                    revenueSplitChart.update();
-                    return;
-                }
-                
-                return new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Revenue Allocation'],
-                        datasets: [
-                            { label: 'Company Reserve', data: [companyReserveAmount], backgroundColor: '#c9bab6', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Taxes', data: [taxesAmount], backgroundColor: '#f8dd9d', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Operating Expenses', data: [expenses], backgroundColor: '#dc300f', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Founders\' Draws (Min)', data: [totalSalaries], backgroundColor: '#ff4010', borderWidth: 1, stack: 'stack1' },
-                            { label: 'Final Surplus/Deficit', data: [Math.max(0, finalSurplus)], backgroundColor: '#64aed2', borderWidth: 1, stack: 'stack1' },
-                        ]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.x !== null) {
-                                            label += formatCurrency(context.parsed.x);
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                stacked: true,
-                                title: { display: true, text: 'Amount (USD)' },
-                                ticks: {
-                                    callback: (value) => formatCurrency(value)
-                                },
-                                max: revenue > 0 ? revenue : 1,
-                            },
-                            y: { stacked: true }
-                        }
-                    }
-                });
-            };
-
-            const updateRevenueModel = () => {
-                const revenue = parseFloat(document.getElementById('revenueSlider').value);
-                const numberOfClients = parseFloat(document.getElementById('clientsSlider').value); 
-                const expenses = numberOfClients * config.costPerClient; 
-
-                const companyReserveAmount = revenue * config.reservePercent;
-                const taxesAmount = revenue * config.taxPercent;
-                const totalSalaries = config.yourMinSalary + config.creggMinSalary;
-                
-                // Calculate revenue remaining after mandatory company deductions (reserve, taxes, expenses)
-                const revenueAfterFixedCompanyCosts = revenue - companyReserveAmount - taxesAmount - expenses;
-                const finalSurplus = revenueAfterFixedCompanyCosts - totalSalaries;
-
-                // Break-even calculation:
-                // Let R = total revenue.
-                // R - (R * reservePercent) - (R * taxPercent) - expenses - totalSalaries = 0
-                // R * (1 - reservePercent - taxPercent) = expenses + totalSalaries
-                // R * (1 - 0.10 - 0.15) = expenses + totalSalaries
-                // R * 0.75 = expenses + totalSalaries
-                // R = (expenses + totalSalaries) / 0.75
-                const minRevenueNeeded = (expenses + totalSalaries) / (1 - config.reservePercent - config.taxPercent);
-
-
-                document.getElementById('revenueValue').textContent = formatCurrency(revenue);
-                document.getElementById('clientsValue').textContent = numberOfClients; 
-                document.getElementById('totalExpenses').textContent = formatCurrency(expenses); 
-                document.getElementById('companyReserve').textContent = formatCurrency(companyReserveAmount);
-                document.getElementById('taxes').textContent = formatCurrency(taxesAmount);
-                
-                // Update ownerPool to reflect "Revenue After Reserve & Taxes"
-                document.getElementById('revenueAfterAllFixed').textContent = formatCurrency(revenueAfterFixedCompanyCosts);
-                
-                document.getElementById('tylerDraw').textContent = formatCurrency(config.yourMinSalary);
-                document.getElementById('creggDraw').textContent = formatCurrency(config.creggMinSalary);
-
-                // Note: Percentages for individual draws are now relative to the total revenue, not the owner pool, for clarity.
-                const tylerPercentOfRevenue = revenue > 0 ? (config.yourMinSalary / revenue) * 100 : 0;
-                const creggPercentOfRevenue = revenue > 0 ? (config.creggMinSalary / revenue) * 100 : 0;
-
-                const tylerPercentEl = document.getElementById('tylerPercent');
-                if (tylerPercentEl) {
-                    tylerPercentEl.textContent = `(${tylerPercentOfRevenue.toFixed(0)}%)`;
-                }
-
-                const creggPercentEl = document.getElementById('creggPercent');
-                if (creggPercentEl) {
-                    creggPercentEl.textContent = `(${creggPercentOfRevenue.toFixed(0)}%)`;
-                }
-                
-                document.getElementById('remainder').textContent = formatCurrency(finalSurplus);
-                document.getElementById('breakEvenRevenue').textContent = formatCurrency(minRevenueNeeded);
-
-
-                const remainderEl = document.getElementById('remainder');
-                remainderEl.classList.toggle('text-red-600', finalSurplus < 0);
-                remainderEl.classList.toggle('text-pure-white', finalSurplus >= 0);
-
-                createRevenueSplitChart(revenue, expenses, config.yourMinSalary, config.creggMinSalary);
-            };
-
-            const updateBuybackCalculator = () => {
-                const select = document.getElementById('buybackTime');
-                const price = select.value;
-                const display = document.getElementById('buybackPrice');
-                display.textContent = price === 'FMV' ? 'Fair Market Value' : formatCurrency(price);
-            };
-
-            const updateCeoPath = () => {
-                const checkboxes = document.querySelectorAll('#ceoChecklist input[type="checkbox"]');
-                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                if (allChecked) {
-                    createCeoPathChart(51, 49);
+                let confirmationHtml = '';
+                if (provider.answerConfirmation === 'Yes') {
+                    confirmationHtml = '<span class="ml-auto text-xs font-bold text-green-500 bg-green-100 px-2 py-1 rounded-full">CONFIRMED</span>';
                 } else {
-                    createCeoPathChart(70, 30);
+                    confirmationHtml = '<span class="ml-auto text-xs font-bold text-amber-500 bg-amber-100 px-2 py-1 rounded-full">VERIFY</span>';
                 }
-            };
-            
-            document.getElementById('revenueSlider').addEventListener('input', updateRevenueModel);
-            document.getElementById('clientsSlider').addEventListener('input', updateRevenueModel);
-            document.getElementById('buybackTime').addEventListener('change', updateBuybackCalculator);
-            document.querySelectorAll('#ceoChecklist input[type="checkbox"]').forEach(cb => {
-                cb.addEventListener('change', updateCeoPath);
+
+                providerListEl.innerHTML += `
+                    <button data-id="${provider.id}" class="provider-card w-full text-left p-4 rounded-lg shadow-sm border-2 ${isSelected ? 'selected' : ''} ${buttonClasses} transition duration-200 flex items-center">
+                        <div>
+                            <p class="font-semibold">${provider.name}</p>
+                            <p class="text-sm opacity-80">${provider.tagline}</p>
+                        </div>
+                        ${confirmationHtml}
+                    </button>
+                `;
             });
 
-            equityChart = createEquityChart();
-            ceoPathChart = createCeoPathChart();
-            revenueSplitChart = createRevenueSplitChart();
-            updateRevenueModel(); // Initial call to set values
-            updateBuybackCalculator();
+            document.querySelectorAll('.provider-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    selectedProviderId = e.currentTarget.dataset.id;
+                    renderProviderList();
+                    renderProviderDetails();
+                });
+            });
+        }
+
+        function renderProviderDetails() {
+            const provider = providerData.find(p => p.id === selectedProviderId);
+            if (!provider) {
+                providerDetailsContainerEl.innerHTML = '<p>Select a provider to see details.</p>';
+                return;
+            }
+
+            let confirmationHtml = '';
+                if (provider.answerConfirmation === 'Yes') {
+                    confirmationHtml = '<div class="mb-4 p-3 bg-teal-50 text-teal-800 border-l-4 border-teal-500 rounded-r-lg"><strong>Answer Confirmation:</strong> Yes. This is the safest option.</div>';
+                } else {
+                    confirmationHtml = '<div class="mb-4 p-3 bg-amber-50 text-amber-800 border-l-4 border-amber-500 rounded-r-lg"><strong>Answer Confirmation:</strong> <span class="font-bold">Needs Verification.</span> This is a critical risk you must investigate with their sales team.</div>';
+                }
+
+            providerDetailsContainerEl.innerHTML = `
+                <h4 class="text-2xl font-bold mb-2">${provider.name}</h4>
+                <p class="text-stone-500 mb-4">${provider.notes}</p>
+                ${confirmationHtml}
+                <h5 class="font-semibold text-lg mb-2">Setup Steps:</h5>
+                <ol class="list-decimal list-inside space-y-2 text-stone-600">
+                    ${provider.setup.map(step => `<li>${step}</li>`).join('')}
+                </ol>
+            `;
+        }
+        
+        function calculateCosts(numUsers) {
+            return providerData.map(p => {
+                const effectiveUsers = Math.max(numUsers, p.minUsers);
+                return {
+                    name: p.name,
+                    cost: effectiveUsers * p.pricePerUser
+                };
+            });
+        }
+
+        function updateChart() {
+            const userCount = parseInt(userCountInput.value) || 3;
+            const costs = calculateCosts(userCount);
+            
+            costChart.data.labels = costs.map(c => c.name);
+            costChart.data.datasets[0].data = costs.map(c => c.cost);
+            costChart.options.plugins.title.text = `Estimated Monthly Cost for ${userCount} Users`;
+            costChart.update();
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            const initialCosts = calculateCosts(parseInt(userCountInput.value));
+
+            costChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: initialCosts.map(c => c.name),
+                    datasets: [{
+                        label: 'Estimated Monthly Cost ($)',
+                        data: initialCosts.map(c => c.cost),
+                        backgroundColor: [
+                            'rgba(13, 148, 136, 0.6)',
+                            'rgba(245, 158, 11, 0.6)',
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(139, 92, 246, 0.6)',
+                            'rgba(239, 68, 68, 0.6)',
+                            'rgba(20, 184, 166, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgb(15, 118, 110)',
+                            'rgb(217, 119, 6)',
+                            'rgb(37, 99, 235)',
+                            'rgb(124, 58, 237)',
+                            'rgb(220, 38, 38)',
+                            'rgb(9, 132, 119)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'USD per Month'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: `Estimated Monthly Cost for 3 Users`,
+                            font: {
+                                size: 18
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Est. Monthly Cost: $${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProviderList();
+            renderProviderDetails();
+            initializeChart();
+            userCountInput.addEventListener('input', updateChart);
         });
-
-        // LLM Integration Functions
-        const openModal = () => {
-            document.getElementById('explanationModal').style.display = 'flex';
-        };
-
-        const closeModal = () => {
-            document.getElementById('explanationModal').style.display = 'none';
-            document.getElementById('modalText').textContent = '';
-            document.getElementById('modalLoading').classList.add('hidden');
-        };
-
-        const explainClause = async (clauseName) => {
-            document.getElementById('modalTitle').textContent = `Explanation: ${clauseName}`;
-            document.getElementById('modalText').textContent = '';
-            document.getElementById('modalLoading').classList.remove('hidden');
-            openModal();
-
-            const prompt = `Explain the "${clauseName}" section of a founders' agreement dashboard in simple terms, focusing on its purpose and key elements. Keep it concise.`;
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    document.getElementById('modalText').textContent = result.candidates[0].content.parts[0].text;
-                } else {
-                    document.getElementById('modalText').textContent = 'Could not generate explanation. Please try again.';
-                }
-            } catch (error) {
-                document.getElementById('modalText').textContent = 'Error: Failed to connect to the explanation service. Please check your network connection.';
-                console.error('Error fetching explanation:', error);
-            } finally {
-                document.getElementById('modalLoading').classList.add('hidden');
-            }
-        };
-
-        const getScenarioInsights = async () => {
-            const revenue = parseFloat(document.getElementById('revenueSlider').value);
-            const numberOfClients = parseFloat(document.getElementById('clientsSlider').value);
-            const expenses = numberOfClients * config.costPerClient; 
-            const companyReserve = parseFloat(document.getElementById('companyReserve').textContent.replace(/[^0-9.-]+/g,""));
-            const taxes = parseFloat(document.getElementById('taxes').textContent.replace(/[^0-9.-]+/g,""));
-            const tylerDraw = parseFloat(document.getElementById('tylerDraw').textContent.replace(/[^0-9.-]+/g,""));
-            const creggDraw = parseFloat(document.getElementById('creggDraw').textContent.replace(/[^0-9.-]+/g,""));
-            const remainder = parseFloat(document.getElementById('remainder').textContent.replace(/[^0-9.-]+/g,""));
-            const minRevenueNeeded = parseFloat(document.getElementById('breakEvenRevenue').textContent.replace(/[^0-9.-]+/g,""));
-
-
-            document.getElementById('scenarioInsights').classList.remove('hidden');
-            document.getElementById('insightsText').textContent = '';
-            document.getElementById('insightsLoading').classList.remove('hidden');
-
-            const prompt = `Given a monthly gross revenue of ${formatCurrency(revenue)}, company reserve of ${formatCurrency(companyReserve)}, taxes of ${formatCurrency(taxes)}, and monthly operating expenses of ${formatCurrency(expenses)} based on ${numberOfClients} clients (${formatCurrency(config.costPerClient)} per client). Tyler's minimum draw is ${formatCurrency(tylerDraw)} and Cregg's minimum draw is ${formatCurrency(creggDraw)}. The final surplus/deficit after all these deductions is ${formatCurrency(remainder)}. The minimum revenue needed to break even and cover all these costs (including minimum draws) is ${formatCurrency(minRevenueNeeded)}. What are the key takeaways or implications for the founders at this specific financial scenario? Be concise and actionable.`;
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    document.getElementById('insightsText').textContent = result.candidates[0].content.parts[0].text;
-                } else {
-                    document.getElementById('insightsText').textContent = 'Could not generate insights. Please try again.';
-                }
-            } catch (error) {
-                document.getElementById('insightsText').textContent = 'Error: Failed to connect to the insights service. Please check your network connection.';
-                console.error('Error fetching insights:', error);
-            } finally {
-                document.getElementById('insightsLoading').classList.add('hidden');
-            }
-        };
     </script>
 </body>
 </html>
